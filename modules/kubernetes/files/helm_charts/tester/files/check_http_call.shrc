@@ -1,0 +1,36 @@
+function check_http_call() {
+  url="$1"; shift
+  host="$1"; shift
+  shift $#
+  total=0
+  success=0
+
+  if type curl >/dev/null 2>&1; then
+    set -- 'curl'  "${url}" --data '"Test"' '--connect-timeout' '1'
+  elif type wget >/dev/null 2>&1; then
+    set -- 'wget'  "${url}" '--post-data' '"Test"' '-T' '1' '-O' '-'
+  else
+    echo "Missing curl or wget. Exit."
+    return 1
+  fi
+
+  [[ -z "${host}" ]] || {
+    case "${command}" in
+      curl)
+        set -- "$@" '--header' "Host: ${host}" '--insecure'
+        ;;
+      wget)
+        set -- "$@" '--header' "Host: ${host}" '--no-check-certificate'
+        ;;
+    esac
+  }
+  echo "Using $@"
+  for i in $(seq 1 200); do
+    "$@" >/dev/null 2>&1; rc=$?
+    echo "$(date -u -Iseconds) rc: ${rc}"
+    [[ $rc != 0 ]] || success=$((success + 1))
+    total=$((total + 1))
+  done
+  printf "% 5d / % 5d  (%02d%%)\n" "${success}" "${total}" "$((100 * success / total))"
+  [[ "${success}" == "${total}" ]]
+}

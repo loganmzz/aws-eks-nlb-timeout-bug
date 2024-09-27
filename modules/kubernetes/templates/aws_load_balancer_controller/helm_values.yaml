@@ -1,0 +1,6 @@
+clusterName: ${jsonencode(cluster_name)}
+serviceAccount:
+  name: ${jsonencode(service_account_name)}
+  annotations:
+    "eks.amazonaws.com/role-arn": ${jsonencode(role_arn)}
+defaultTags: ${jsonencode(default_tags)}
